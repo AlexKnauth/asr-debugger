@@ -1802,7 +1802,7 @@ checksum = "3852614a3bd9ca9804678ba6be5e3b8ce76dfc902cae004e3e0c44051b6e88db"
 [[package]]
 name = "livesplit-auto-splitting"
 version = "0.1.0"
-source = "git+https://github.com/AlexKnauth/livesplit-core?branch=auto_splitter_settings_query#af61b89307ab3c49e5aeead7fef4a56e0a1298db"
+source = "git+https://github.com/AlexKnauth/livesplit-core?branch=auto_splitter_settings_query#b92235a314f1af641b46403564ec98b4d8062c78"
 dependencies = [
  "anyhow",
  "async-trait",
