@@ -27,7 +27,7 @@ use egui_file::FileDialog;
 use egui_plot::{Bar, BarChart, Legend, Plot, VLine};
 use hdrhistogram::Histogram;
 use indexmap::IndexMap;
-use livesplit_auto_splitting::{settings, time, Config, Runtime, Timer, TimerState};
+use livesplit_auto_splitting::{settings, time, Config, ConfigSettings, Runtime, Timer, TimerState};
 
 mod clear_vec;
 
@@ -822,18 +822,19 @@ impl AppState {
         self.path = Some(file);
         let mut succeeded = true;
 
-        let settings_map = if !clear {
+        let config_settings = if !clear {
             self.shared_state
                 .runtime
                 .read()
                 .unwrap()
                 .as_ref()
                 .map(|r| r.settings_map())
+                .map_or(ConfigSettings::None, ConfigSettings::Map)
         } else {
-            None
+            ConfigSettings::None
         };
 
-        let config = self.build_runtime_config(settings_map);
+        let config = self.build_runtime_config(config_settings);
 
         *self.shared_state.prepare_to_replace_runtime() =
             match Runtime::new(&self.module, self.timer.clone(), config) {
@@ -872,9 +873,9 @@ impl AppState {
         }
     }
 
-    fn build_runtime_config(&self, settings_map: Option<settings::Map>) -> Config<'_> {
+    fn build_runtime_config(&self, config_settings: ConfigSettings) -> Config<'_> {
         let mut config = Config::default();
-        config.settings_map = settings_map;
+        config.settings = config_settings;
         config.interpreter_script_path = self.script_path.as_deref();
         config.debug_info = true;
         config.optimize = self.optimize;
