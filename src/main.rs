@@ -627,7 +627,7 @@ impl egui_dock::TabViewer for TabViewer<'_> {
                                 let current_path: Option<PathBuf> =
                                     match settings_map.get(&setting.key) {
                                         Some(settings::Value::String(path)) => {
-                                            wasi_path::to_native(path)
+                                            wasi_path::to_native(path, false)
                                         }
                                         _ => None,
                                     };
@@ -1065,6 +1065,15 @@ struct DebuggerTimer(Arc<RwLock<DebuggerTimerState>>);
 impl Timer for DebuggerTimer {
     fn state(&self) -> TimerState {
         self.0.read().unwrap().timer_state
+    }
+
+    fn current_split_index(&self) -> Option<usize> {
+        let t = self.0.read().unwrap();
+        if t.timer_state == TimerState::NotRunning {
+            None
+        } else {
+            Some(t.split_index)
+        }
     }
 
     fn start(&mut self) {
