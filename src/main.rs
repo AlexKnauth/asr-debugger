@@ -506,10 +506,18 @@ impl egui_dock::TabViewer for TabViewer<'_> {
                     }
                     if ui.button("Save").clicked() {
                         if let Err(e) = File::create("auto_splitter_logs.txt").and_then(|mut f| {
-                            for LogMessage { message, .. } in
+                            for LogMessage { time, message, ty } in
                                 &self.state.timer.0.read().unwrap().logs
                             {
-                                writeln!(f, "{message}")?;
+                                let (target, level) = match ty {
+                                    LogType::AutoSplitterMessage => ("Auto Splitter", "INFO"),
+                                    LogType::Runtime(LogLevel::Trace) => ("Runtime", "TRACE"),
+                                    LogType::Runtime(LogLevel::Debug) => ("Runtime", "DEBUG"),
+                                    LogType::Runtime(LogLevel::Info) => ("Runtime", "INFO"),
+                                    LogType::Runtime(LogLevel::Warning) => ("Runtime", "WARN"),
+                                    LogType::Runtime(LogLevel::Error) => ("Runtime", "ERROR"),
+                                };
+                                writeln!(f, "[{time}][{target}][{level}] {message}")?;
                             }
                             Ok(())
                         }) {
