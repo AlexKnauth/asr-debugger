@@ -1,7 +1,9 @@
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")] // hide console window on Windows in release
 
 use std::{
-    fmt, fs,
+    fmt,
+    fs::{self, File},
+    io::Write,
     path::PathBuf,
     sync::{
         atomic::{AtomicU64, AtomicUsize},
@@ -501,6 +503,29 @@ impl egui_dock::TabViewer for TabViewer<'_> {
                 ui.horizontal(|ui| {
                     if ui.button("Clear").clicked() {
                         self.state.timer.0.write().unwrap().logs.clear();
+                    }
+                    if ui.button("Save").clicked() {
+                        if let Err(e) = File::create("auto_splitter_logs.txt").and_then(|mut f| {
+                            for LogMessage { time, message, ty } in
+                                &self.state.timer.0.read().unwrap().logs
+                            {
+                                let (target, level) = match ty {
+                                    LogType::AutoSplitterMessage => ("Auto Splitter", "INFO"),
+                                    LogType::Runtime(LogLevel::Trace) => ("Runtime", "TRACE"),
+                                    LogType::Runtime(LogLevel::Debug) => ("Runtime", "DEBUG"),
+                                    LogType::Runtime(LogLevel::Info) => ("Runtime", "INFO"),
+                                    LogType::Runtime(LogLevel::Warning) => ("Runtime", "WARN"),
+                                    LogType::Runtime(LogLevel::Error) => ("Runtime", "ERROR"),
+                                };
+                                writeln!(f, "[{time}][{target}][{level}] {message}")?;
+                            }
+                            Ok(())
+                        }) {
+                            self.state.timer.0.write().unwrap().log(
+                                format!("Failed to save log file: {}", e).into(),
+                                LogType::Runtime(LogLevel::Error),
+                            );
+                        }
                     }
                 });
                 if scroll_to_end {
